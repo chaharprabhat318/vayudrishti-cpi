@@ -1,20 +1,26 @@
 """
-VayuDrishti Application Launcher (Render & Local Ready)
+VayuDrishti Universal Application Launcher (Render, Linux, Windows, macOS)
 """
-import uvicorn
 import os
 import sys
 
-# Ensure backend package is on python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "backend"))
+# Auto-detect backend folder location
+current_dir = os.path.dirname(os.path.abspath(__file__))
+possible_paths = [
+    os.path.join(current_dir, "backend"),
+    os.path.join(current_dir, "vayudrishti-cpi", "backend"),
+    current_dir
+]
+
+for p in possible_paths:
+    if os.path.exists(p) and p not in sys.path:
+        sys.path.insert(0, p)
+
+import uvicorn
+from app.main import app
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     host = "0.0.0.0"
-    print("=" * 70)
-    print(" VAYUDRISHTI (??????????) - REAL-TIME AIRFARE PRICE INDEX FOR MoSPI")
-    print(" Ministry of Statistics and Programme Implementation, Government of India")
-    print(" Smart India Hackathon (SIH26056)")
-    print("=" * 70)
-    print(f" Starting Server on http://{host}:{port} ...")
-    uvicorn.run("app.main:app", host=host, port=port, reload=False)
+    print(f"[VayuDrishti] Server starting on http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)
