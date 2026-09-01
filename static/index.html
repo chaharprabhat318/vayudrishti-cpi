@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VayuDrishti (??????????) | MoSPI Real-time Airfare Price Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="/css/style.css?v=2.5">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+    <div class="tricolor-stripe"></div>
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 bg-blue-950 text-amber-500 rounded-lg flex items-center justify-center font-bold text-xl shadow border border-amber-600/30">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-900">Government of India &bull; MoSPI</span>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300">SIH26056</span>
+                        <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-300">NSO Live Feed</span>
+                    </div>
+                    <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        VayuDrishti <span class="text-blue-700 font-semibold">(??????????)</span>
+                        <span class="text-xs font-normal text-slate-500 hidden sm:inline">&mdash; Real-time Airfare Price Index for CPI Augmentation</span>
+                    </h1>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+                    <span class="pulse-green"></span>
+                    <span>Scrapers Ingesting (6 Portals)</span>
+                </div>
+                <a href="/api/export/gazette-pdf" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-pdf text-amber-400"></i> MoSPI Gazette Bulletin
+                </a>
+            </div>
+        </div>
+        <div class="bg-slate-900 text-slate-200 text-xs py-1 px-4 border-t border-slate-800 ticker-wrap">
+            <div class="ticker-content flex items-center gap-8 font-mono">
+                <span><b class="text-amber-400">NATIONAL AFI:</b> 114.80 (+1.80% MoM)</span>
+                <span><b class="text-blue-400">DEL &rarr; BOM:</b> &#8377;4,850 (AFI: 113.8)</span>
+                <span><b class="text-blue-400">BLR &rarr; DEL:</b> &#8377;5,420 (AFI: 114.5)</span>
+                <span><b class="text-blue-400">BOM &rarr; BLR:</b> &#8377;3,980 (AFI: 112.9)</span>
+                <span><b class="text-red-400">DEL &rarr; IXL (Leh):</b> &#8377;9,850 (AFI: 132.4 ? Surge)</span>
+                <span><b class="text-red-400">DEL &rarr; SXR (Srinagar):</b> &#8377;7,420 (AFI: 126.1 ? Peak)</span>
+                <span><b class="text-emerald-400">DEL &rarr; DBG (UDAN):</b> &#8377;4,120 (AFI: 108.2 &#10003; Capped)</span>
+                <span><b class="text-purple-400">CPI NOWCAST:</b> 198.70 (+30 bps Transport Impact)</span>
+            </div>
+        </div>
+        <div class="bg-white border-t border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-1 py-1">
+                <button class="tab-btn active px-3.5 py-2 text-xs font-bold rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabOverview">
+                    <i class="fa-solid fa-chart-line"></i> National AFI Dashboard
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabRoutes">
+                    <i class="fa-solid fa-map-location-dot"></i> Corridor Network & Heatmap
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabHedonic">
+                    <i class="fa-solid fa-square-root-variable"></i> Econometric & Hedonic Engine
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabCPI">
+                    <i class="fa-solid fa-scale-balanced"></i> CPI Augmentation & Nowcasting
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabSimulation">
+                    <i class="fa-solid fa-sliders"></i> Policy & ATF Simulator
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabGazette">
+                    <i class="fa-solid fa-stamp"></i> Official MoSPI Gazette
+                </button>
+                <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabScrapers">
+                    <i class="fa-solid fa-tower-broadcast"></i> Ingestion Telemetry
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: OVERVIEW & MACRO AFI DASHBOARD -->
+        <section id="tabOverview" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="kpi-card p-4 border-l-4 border-l-blue-900">
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                        <span>NATIONAL AIRFARE INDEX (AFI)</span>
+                        <span class="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Base 2024=100</span>
+                    </div>
+                    <div class="text-3xl font-black text-blue-950 flex items-baseline gap-2">
+                        <span id="kpiNationalIndex">114.80</span>
+                        <span class="text-xs font-bold text-red-600"><i class="fa-solid fa-arrow-trend-up"></i> <span id="kpiDodChange">+0.4%</span></span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-2 flex justify-between">
+                        <span>MoM: <b id="kpiMomChange" class="text-slate-800">+1.8%</b></span>
+                        <span>YoY: <b id="kpiYoyChange" class="text-slate-800">+8.4%</b></span>
+                    </div>
+                </div>
+
+                <div class="kpi-card p-4 border-l-4 border-l-emerald-600">
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                        <span>HEDONIC QUALITY-ADJUSTED INDEX</span>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Pure Inflation</span>
+                    </div>
+                    <div class="text-3xl font-black text-emerald-950 flex items-baseline gap-2">
+                        <span id="kpiHedonic">113.90</span>
+                        <span class="text-xs font-bold text-emerald-700">&#8710; Quality: -0.9 pts</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-2">
+                        Controls for lead-time, flight duration & amenities
+                    </div>
+                </div>
+
+                <div class="kpi-card p-4 border-l-4 border-l-amber-600">
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                        <span>JEVONS ELEMENTARY AGGREGATE</span>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Geometric Mean</span>
+                    </div>
+                    <div class="text-3xl font-black text-amber-950 flex items-baseline gap-2">
+                        <span id="kpiJevons">113.20</span>
+                        <span class="text-xs font-bold text-slate-600">Unweighted</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-2">
+                        Laspeyres Index: <b id="kpiLaspeyres" class="text-slate-800">114.80</b>
+                    </div>
+                </div>
+
+                <div class="kpi-card p-4 border-l-4 border-l-purple-600">
+                    <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                        <span>HIGH-FREQUENCY QUOTES HARVESTED</span>
+                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-bold">24h Ingestion</span>
+                    </div>
+                    <div class="text-3xl font-black text-purple-950 flex items-baseline gap-2">
+                        <span id="kpiObsCount">2,140</span>
+                        <span class="text-xs font-bold text-emerald-600">&#10003; 100% Clean</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-2">
+                        Covering 100+ Routes &bull; 7 Lead Horizons
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-blue-900"></i> All-India Airfare Price Index Trajectory (2024-2026)
+                            </h2>
+                            <p class="text-xs text-slate-500">Comparing DGCA-Weighted Laspeyres, Hedonic Quality-Adjusted, and Jevons indices</p>
+                        </div>
+                        <span class="text-[11px] font-mono bg-slate-100 text-slate-700 px-2 py-1 rounded">Daily Feed</span>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="timeSeriesCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Lead-Time Price Multipliers
+                            </h2>
+                            <p class="text-xs text-slate-500">Index relatives by booking horizon (D-0 to D-60)</p>
+                        </div>
+                    </div>
+                    <div class="h-72">
+                        <canvas id="leadTimeCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-indigo-700"></i> Category Sub-Indices
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Corridor group price index comparison</p>
+                    <div class="h-56">
+                        <canvas id="categoryBarCanvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                    <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-blue-900"></i> MoSPI Statistical Rigor & NSO Standards
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Key innovations embedded into VayuDrishti for official Government of India adoption</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-check-double text-emerald-600"></i> DGCA Passenger Traffic Weighting
+                            </div>
+                            <p class="text-slate-600">Replaces naive unweighted scraping averages with official monthly DGCA seat-kilometer and passenger traffic weights.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-filter text-amber-600"></i> Tukey IQR & Winsorization Filtering
+                            </div>
+                            <p class="text-slate-600">Eliminates scraper scraping anomalies and extreme erroneous fare spikes using robust statistical fences.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-magnifying-glass-chart text-purple-600"></i> Hedonic Amenity Adjustment
+                            </div>
+                            <p class="text-slate-600">Decomposes price changes into pure macroeconomic inflation versus shifts in luggage allowance, layovers, or booking windows.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="font-bold text-blue-950 flex items-center gap-1.5 mb-1">
+                                <i class="fa-solid fa-bolt text-red-600"></i> RBI MPC High-Frequency Early Warning
+                            </div>
+                            <p class="text-slate-600">Provides daily inflation nowcasting 15-20 days ahead of standard monthly lagged survey releases.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CORRIDOR NETWORK & GEOGRAPHIC HEATMAP -->
+        <section id="tabRoutes" class="tab-content hidden space-y-6">
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-blue-900"></i> All-India Civil Aviation Network Matrix (100+ Strategic Corridors)
+                        </h2>
+                        <p class="text-xs text-slate-500">Interactive GIS route map color-coded by inflation and market concentration (HHI)</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <select id="routeCategoryFilter" class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg px-3 py-2">
+                            <option value="ALL">All Corridor Categories</option>
+                            <option value="METRO_METRO">Metro-to-Metro Trunk</option>
+                            <option value="METRO_TIER2">Metro-to-Tier-2 Corridors</option>
+                            <option value="HILL_ISLAND">Hill & Island Strategic</option>
+                            <option value="UDAN_RCS">UDAN Regional Connectivity</option>
+                        </select>
+                        <input id="routeSearchInput" type="text" placeholder="Search City / Airport..." class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg px-3 py-2 w-48 focus:ring-1 focus:ring-blue-900 outline-none">
+                    </div>
+                </div>
+
+                <div id="leafletMap" class="mb-6 shadow-inner"></div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] font-extrabold border-b">
+                                <th class="py-3 px-3">City Pair Corridor</th>
+                                <th class="py-3 px-2">Category</th>
+                                <th class="py-3 px-2 text-right">Base Fare (2024)</th>
+                                <th class="py-3 px-2 text-right">Current Avg Fare</th>
+                                <th class="py-3 px-2 text-center">AFI Index</th>
+                                <th class="py-3 px-2 text-center">HHI Index</th>
+                                <th class="py-3 px-2">Competition Status</th>
+                                <th class="py-3 px-3">Dominant Carrier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ECONOMETRIC & HEDONIC REGRESSION ENGINE -->
+        <section id="tabHedonic" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-square-root-variable text-blue-900"></i> Hedonic Log-Linear Quality Adjustment Model
+                        </h2>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">OLS Micro-Engine</span>
+                    </div>
+                    <div class="bg-slate-900 text-slate-100 p-3 rounded-lg font-mono text-xs mb-4">
+                        ln(Price<sub>i,t</sub>) = &beta;<sub>0</sub> + &beta;<sub>dur</sub>Duration + &beta;<sub>stops</sub>Stops + &beta;<sub>lead</sub>ln(Lead+1) + &beta;<sub>bag</sub>Baggage + &sum; &gamma;<sub>c</sub>Carrier<sub>c</sub> + &epsilon;<sub>i,t</sub>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                        <div class="bg-slate-50 p-2.5 rounded border border-slate-200 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">R-Squared (R&sup2;)</div>
+                            <div id="hedRSquared" class="text-base font-black text-blue-900">0.8942</div>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded border border-slate-200 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">Adj. R-Squared</div>
+                            <div id="hedAdjRSquared" class="text-base font-black text-blue-900">0.8915</div>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded border border-slate-200 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">Sample Observations</div>
+                            <div id="hedSampleSize" class="text-base font-black text-blue-900">1,064</div>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded border border-slate-200 text-center">
+                            <div class="text-[10px] text-slate-500 font-bold uppercase">Pure Price Inflation</div>
+                            <div id="hedPureInflation" class="text-base font-black text-emerald-700">+14.8%</div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] font-extrabold border-b">
+                                    <th class="py-2.5 px-3">Quality Attribute / Dummy</th>
+                                    <th class="py-2.5 px-3 text-right">Coefficient (&beta;)</th>
+                                    <th class="py-2.5 px-3 text-right">p-Value</th>
+                                    <th class="py-2.5 px-3 text-center">Significance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hedonicCoefBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-pie-chart text-amber-600"></i> Airfare Pricing Driver Breakdown
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Relative contribution of flight characteristics to overall fare variance</p>
+                    <div class="h-64">
+                        <canvas id="hedonicRadarCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: CPI AUGMENTATION & NOWCASTING -->
+        <section id="tabCPI" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 font-semibold mb-1">OFFICIAL CPI GENERAL (BASE 2012=100)</div>
+                    <div class="text-2xl font-black text-slate-800" id="cpiGeneralOfficial">198.40</div>
+                    <div class="text-xs text-slate-500 mt-1">Lagged Monthly Release (Survey-based)</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-blue-900">
+                    <div class="text-xs text-slate-500 font-semibold mb-1">AUGMENTED TRANSPORT CPI (8.59% WEIGHT)</div>
+                    <div class="text-2xl font-black text-blue-900 flex items-baseline gap-2">
+                        <span id="cpiTransportAugmented">186.90</span>
+                        <span class="text-xs font-bold text-slate-500">(Official: <span id="cpiTransportOfficial">185.60</span>)</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">Incorporating High-Frequency Airfare Index</div>
+                </div>
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-red-600">
+                    <div class="text-xs text-slate-500 font-semibold mb-1">HEADLINE CPI NOWCAST & IMPACT</div>
+                    <div class="text-2xl font-black text-red-600 flex items-baseline gap-2">
+                        <span id="cpiHeadlineNowcast">198.70</span>
+                        <span class="text-xs font-bold text-red-700" id="cpiDeltaBps">+30.0 bps</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">Early Signal for RBI MPC Policy</div>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="text-amber-600 text-xl mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="text-xs font-extrabold uppercase tracking-wide text-amber-900">RBI Monetary Policy Committee (MPC) Early-Warning Signal</div>
+                        <div class="text-sm font-bold text-amber-950 mt-0.5" id="cpiWarningLevel">ELEVATED (Seasonal Peak Demand)</div>
+                        <p class="text-xs text-amber-800 mt-1" id="cpiCommentary">Airfare inflation adds +30.0 bps to headline CPI. High-frequency transport shock detected.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-blue-900"></i> Longitudinal CPI Nowcasting Comparison
+                </h2>
+                <p class="text-xs text-slate-500 mb-4">Official Monthly CPI vs VayuDrishti High-Frequency Augmented Nowcasts</p>
+                <div class="h-72">
+                    <canvas id="cpiComparisonCanvas"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: POLICY SIMULATION SANDBOX -->
+        <section id="tabSimulation" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-blue-900"></i> Policy & Tax Interventions
+                        </h2>
+                        <p class="text-xs text-slate-500">Adjust macro variables to observe immediate CPI impact</p>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>ATF (Aviation Turbine Fuel) Tax Change</span>
+                            <span id="simAtfLabel" class="text-blue-900 font-bold">0%</span>
+                        </div>
+                        <input id="simAtfSlider" type="range" min="-30" max="30" step="5" value="0" class="w-full accent-blue-900">
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>-30% (Duty Cut)</span><span>0% (Status Quo)</span><span>+30% (Fuel Hike)</span></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>Emergency Lead-Time Fare Cap (D-0 / D-1)</span>
+                            <span id="simCapLabel" class="text-blue-900 font-bold">No Cap</span>
+                        </div>
+                        <input id="simCapSlider" type="range" min="0" max="3.0" step="0.2" value="0" class="w-full accent-blue-900">
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>No Cap (Free Yield)</span><span>2.0x Base</span><span>1.5x Base (Strict)</span></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>UDAN RCS Viability Gap Funding (VGF)</span>
+                            <span id="simUdanLabel" class="text-blue-900 font-bold">0%</span>
+                        </div>
+                        <input id="simUdanSlider" type="range" min="-50" max="50" step="10" value="0" class="w-full accent-blue-900">
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>-50% (Subsidy Cut)</span><span>0%</span><span>+50% (Expansion)</span></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span>Festive / Holiday Season Demand Surge</span>
+                            <span id="simSurgeLabel" class="text-blue-900 font-bold">0%</span>
+                        </div>
+                        <input id="simSurgeSlider" type="range" min="0" max="40" step="5" value="0" class="w-full accent-blue-900">
+                        <div class="flex justify-between text-[10px] text-slate-400"><span>0% (Off-Peak)</span><span>+20% (Holiday)</span><span>+40% (Peak Diwali)</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2 space-y-5">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-gauge-high text-emerald-700"></i> Macroeconomic & CPI Impact Forecast
+                        </h2>
+                        <p class="text-xs text-slate-500">Real-time simulation results computed via econometric pass-through elasticity</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="text-[10px] font-bold uppercase text-slate-500">Simulated Airfare Index</div>
+                            <div class="text-2xl font-black text-blue-950" id="simAfiResult">114.80</div>
+                            <div class="text-xs font-semibold mt-0.5" id="simAfiDelta">0.0% vs Baseline</div>
+                        </div>
+
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="text-[10px] font-bold uppercase text-slate-500">CPI Transport Sub-Index Delta</div>
+                            <div class="text-2xl font-black text-slate-800" id="simTransportResult">0.0%</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">Civil Aviation Component</div>
+                        </div>
+
+                        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                            <div class="text-[10px] font-bold uppercase text-slate-500">Headline CPI Delta</div>
+                            <div class="text-2xl font-black text-blue-600" id="simBpsResult">+0.0 bps</div>
+                            <div class="text-[10px] text-slate-500 mt-0.5">All-India General CPI</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                        <div class="text-xs font-bold text-slate-700 mb-2">Simulated Category Sub-Indices:</div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <div>Metro Trunk: <b id="simCatMetro" class="text-blue-900">113.8</b></div>
+                            <div>Tier-2 Corridors: <b id="simCatTier2" class="text-blue-900">116.4</b></div>
+                            <div>Hill/Island: <b id="simCatHill" class="text-red-700">128.5</b></div>
+                            <div>UDAN RCS: <b id="simCatUdan" class="text-emerald-700">108.2</b></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-900 p-3.5 rounded-r-lg">
+                        <div class="text-xs font-bold uppercase text-blue-900">Executive Policy Recommendation:</div>
+                        <p class="text-xs text-blue-950 mt-1 font-medium" id="simRecText">Simulated conditions are stable. No disruptive policy interventions warranted.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: OFFICIAL MOSPI GAZETTE & EXPORT -->
+        <section id="tabGazette" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 border-b pb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-stamp text-blue-900"></i> MoSPI Official Gazetted Statistical Release
+                        </h2>
+                        <p class="text-xs text-slate-500">Government publication compliant with UN/IMF SDMX and Open Government Data (data.gov.in) standards</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a href="/api/export/gazette-pdf" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                            <i class="fa-solid fa-download text-amber-400"></i> Download Official PDF Bulletin
+                        </a>
+                        <a href="/api/export/json-stat" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-code"></i> SDMX / JSON-stat Feed
+                        </a>
+                    </div>
+                </div>
+
+                <div class="max-w-3xl mx-auto bg-white border-2 border-slate-300 shadow-lg p-8 rounded-sm text-slate-800 space-y-4">
+                    <div class="text-center border-b-2 border-slate-900 pb-3">
+                        <div class="text-sm font-extrabold tracking-widest uppercase text-blue-950">GOVERNMENT OF INDIA</div>
+                        <div class="text-xs font-bold text-slate-700">MINISTRY OF STATISTICS AND PROGRAMME IMPLEMENTATION</div>
+                        <div class="text-[11px] text-slate-600">NATIONAL STATISTICAL OFFICE (NSO) - PRICE STATISTICS DIVISION</div>
+                        <div class="text-xs font-bold text-red-700 mt-1">MONTHLY STATISTICAL BULLETIN: REAL-TIME AIRFARE PRICE INDEX (AFI)</div>
+                    </div>
+
+                    <div class="text-xs text-slate-700 leading-relaxed">
+                        The National Statistical Office (NSO), MoSPI releases the high-frequency <b>Airfare Price Index (AFI)</b> for the month of August 2026. The composite DGCA-weighted Laspeyres Index stands at <b>114.80</b> (Base 2024=100.0), registering a year-on-year inflation of <b>+8.40%</b>. Quality-adjusted Hedonic Index stands at <b>113.90</b>, isolating pure price movements from booking horizon and amenity variations.
+                    </div>
+
+                    <div class="border border-slate-300 rounded overflow-hidden">
+                        <table class="w-full text-[11px] text-left">
+                            <thead class="bg-blue-950 text-white">
+                                <tr>
+                                    <th class="p-2">Series Description</th>
+                                    <th class="p-2 text-right">Current Value</th>
+                                    <th class="p-2 text-right">MoM (%)</th>
+                                    <th class="p-2 text-right">YoY (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200">
+                                <tr><td class="p-2 font-semibold">National Airfare Index (Laspeyres)</td><td class="p-2 text-right font-mono font-bold">114.80</td><td class="p-2 text-right">+1.80%</td><td class="p-2 text-right">+8.40%</td></tr>
+                                <tr><td class="p-2 font-semibold">Hedonic Quality-Adjusted Index</td><td class="p-2 text-right font-mono font-bold">113.90</td><td class="p-2 text-right">+1.76%</td><td class="p-2 text-right">+14.80%</td></tr>
+                                <tr><td class="p-2 font-semibold">Jevons Elementary Geometric Mean</td><td class="p-2 text-right font-mono font-bold">113.20</td><td class="p-2 text-right">+1.71%</td><td class="p-2 text-right">+7.72%</td></tr>
+                                <tr><td class="p-2 font-semibold">Augmented CPI Transport Sub-Index</td><td class="p-2 text-right font-mono font-bold">186.90</td><td class="p-2 text-right">+0.70%</td><td class="p-2 text-right">+6.30%</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-[10px] text-slate-500 pt-2 border-t flex justify-between">
+                        <span>Authentication: SHA-256 Validated</span>
+                        <span>Sign-off: Director General, Central Statistics Office (CSO)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: INGESTION & SCRAPER HEALTH -->
+        <section id="tabScrapers" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-tower-broadcast text-blue-900"></i> Scraper Orchestration Center
+                        </h2>
+                        <p class="text-xs text-slate-500">Autonomous ingestion from airline and OTA endpoints</p>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="text-slate-500">Total Quotes Collected:</span>
+                            <span id="scraperTotalQuotes" class="font-bold text-blue-950">1,064</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="text-slate-500">Last Execution Run:</span>
+                            <span id="scraperLastRun" class="font-mono font-bold text-slate-800">2026-08-31 10:00:00</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="text-slate-500">Pipeline Health Status:</span>
+                            <span id="scraperHealth" class="font-bold text-emerald-700">&#10003; OPERATIONAL</span>
+                        </div>
+                    </div>
+
+                    <button id="btnTriggerBatch" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> Trigger Live Ingestion Batch
+                    </button>
+                    <p class="text-[11px] text-slate-400 text-center">Harvests 100+ routes across 6 portals with instant outlier sanitization.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+                    <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-indigo-700"></i> Recent Ingestion Execution Log
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Historical audit trail of scraping runs, route coverage, and execution times</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] font-extrabold border-b">
+                                    <th class="py-2 px-3">Timestamp</th>
+                                    <th class="py-2 px-3">Portal Source</th>
+                                    <th class="py-2 px-3 text-center">Routes</th>
+                                    <th class="py-2 px-3 text-center">Quotes</th>
+                                    <th class="py-2 px-3 text-center">Status</th>
+                                    <th class="py-2 px-3 text-right">Execution Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scraperLogsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-700">VayuDrishti (??????????)</span>
+                <span>&bull; Ministry of Statistics and Programme Implementation (MoSPI)</span>
+            </div>
+            <div>
+                Developed for Smart India Hackathon &bull; Problem Statement ID: <b>SIH26056</b>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/charts.js?v=2.5"></script>
+    <script src="/js/map.js?v=2.5"></script>
+    <script src="/js/simulation.js?v=2.5"></script>
+    <script src="/js/app.js?v=2.5"></script>
+</body>
+</html>
