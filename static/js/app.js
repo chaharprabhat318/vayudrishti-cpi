@@ -1,15 +1,20 @@
 /**
- * VayuDrishti Core App Manager
+ * VayuDrishti Core App Manager & Real-Time Live Streaming Controller
  */
 let globalRoutes = [];
 let globalAirports = {};
 let globalLatestIndex = {};
 let globalCpi = {};
+let lastKnownIndexValue = 114.80;
+let lastRenderedQuotes = new Set();
+let livePollingInterval = null;
+let isAutoScrapingEnabled = true;
 
 document.addEventListener('DOMContentLoaded', async () => {
     setupTabNavigation();
     await loadInitialData();
     setupEventListeners();
+    startRealtimeStreamPolling();
 });
 
 function setupTabNavigation() {
@@ -36,6 +41,7 @@ async function loadInitialData() {
         // 1. Fetch Latest Index
         const resIdx = await fetch('/api/indices/latest');
         globalLatestIndex = await resIdx.json();
+        lastKnownIndexValue = globalLatestIndex.national_airfare_index;
         renderKPIs(globalLatestIndex);
         
         // 2. Fetch History
@@ -69,8 +75,8 @@ async function loadInitialData() {
         const cpiSeriesData = await resCpiSeries.json();
         initCPIChart(cpiSeriesData);
         
-        // 6. Fetch Scraper Status
-        await refreshScraperStatus();
+        // 6. Fetch Scraper Status & Prime Live Stream
+        await refreshLiveStreamFeed();
         
         // 7. Initialize Policy Simulator defaults
         runPolicySimulation();
@@ -79,11 +85,114 @@ async function loadInitialData() {
     }
 }
 
+function startRealtimeStreamPolling() {
+    if (livePollingInterval) clearInterval(livePollingInterval);
+    // Poll live stream every 3.5 seconds to catch newly scraped flights
+    livePollingInterval = setInterval(refreshLiveStreamFeed, 3500);
+}
+
+async function refreshLiveStreamFeed() {
+    try {
+        const res = await fetch('/api/scrapers/live-stream');
+        const data = await res.json();
+        
+        isAutoScrapingEnabled = data.is_auto_scraping;
+        
+        // Update Live Status Pill
+        const statusBadge = document.getElementById('headerScraperStatus');
+        if (statusBadge) {
+            if (isAutoScrapingEnabled) {
+                statusBadge.className = 'flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold';
+                statusBadge.innerHTML = `<span class="pulse-green"></span><span>Auto-Harvesting Live (Every ${data.interval_seconds}s)</span>`;
+            } else {
+                statusBadge.className = 'flex items-center gap-2 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-semibold';
+                statusBadge.innerHTML = `<i class="fa-solid fa-pause text-amber-600"></i><span>Auto-Scraping Paused</span>`;
+            }
+        }
+        
+        // Update Live Total Quotes
+        const obsElem = document.getElementById('kpiObsCount');
+        if (obsElem && data.total_quotes_db) {
+            obsElem.innerText = data.total_quotes_db.toLocaleString();
+        }
+        
+        const totalScrapedElem = document.getElementById('scraperTotalQuotes');
+        if (totalScrapedElem) totalScrapedElem.innerText = data.total_quotes_db.toLocaleString();
+        
+        // Check if National AFI changed and trigger visual flash animation
+        const newAfi = data.latest_index.national_index;
+        if (newAfi && Math.abs(newAfi - lastKnownIndexValue) > 0.001) {
+            lastKnownIndexValue = newAfi;
+            
+            const kpiCard = document.getElementById('nationalKpiCard');
+            if (kpiCard) {
+                kpiCard.classList.remove('flash-update');
+                void kpiCard.offsetWidth; // trigger reflow
+                kpiCard.classList.add('flash-update');
+            }
+            
+            document.getElementById('kpiNationalIndex').innerText = newAfi.toFixed(2);
+            document.getElementById('kpiLaspeyres').innerText = data.latest_index.laspeyres_index.toFixed(2);
+            document.getElementById('kpiJevons').innerText = data.latest_index.jevons_index.toFixed(2);
+            document.getElementById('kpiHedonic').innerText = data.latest_index.hedonic_index.toFixed(2);
+            
+            // Recompute CPI on the fly
+            const resCpi = await fetch('/api/cpi/augmentation?current_afi=' + newAfi);
+            globalCpi = await resCpi.json();
+            renderCPIAugmentation(globalCpi);
+        }
+        
+        // Render Live Quotes Streaming List
+        renderLiveQuotesStream(data.live_quotes);
+        
+    } catch (e) {
+        console.warn('Live stream poll error:', e);
+    }
+}
+
+function renderLiveQuotesStream(quotes) {
+    const container = document.getElementById('liveStreamContainer');
+    if (!container || !quotes || quotes.length === 0) return;
+    
+    container.innerHTML = '';
+    
+    quotes.slice(0, 10).forEach((q, idx) => {
+        const item = document.createElement('div');
+        item.className = 'quote-item-enter p-2.5 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition';
+        
+        let carrierColor = 'bg-blue-600';
+        if (q.carrier_code === 'AI') carrierColor = 'bg-red-600';
+        if (q.carrier_code === 'QP') carrierColor = 'bg-amber-600';
+        if (q.carrier_code === 'SG') carrierColor = 'bg-orange-600';
+        
+        const leadText = q.lead_time_days === 0 ? 'D-0 (Emergency)' : `D-${q.lead_time_days}`;
+        
+        item.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="${carrierColor} text-white text-[10px] font-black px-2 py-0.5 rounded shadow-sm">${q.carrier_code}</span>
+                <div>
+                    <span class="font-bold text-slate-900">${q.origin_city} (${q.origin}) &rarr; ${q.dest_city} (${q.destination})</span>
+                    <span class="text-[10px] text-slate-500 ml-1 font-mono">${q.flight_number} &bull; ${q.portal_source}</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">${leadText}</span>
+                <span class="font-bold text-sm text-blue-950 font-mono">&#8377;${q.price_inr.toLocaleString()}</span>
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <i class="fa-solid fa-check text-[9px]"></i> Tukey IQR Pass
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono hidden md:inline">${q.timestamp.split(' ')[1]}</span>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+}
+
 function renderKPIs(data) {
-    document.getElementById('kpiNationalIndex').innerText = data.national_airfare_index;
-    document.getElementById('kpiLaspeyres').innerText = data.laspeyres_index;
-    document.getElementById('kpiJevons').innerText = data.jevons_index;
-    document.getElementById('kpiHedonic').innerText = data.hedonic_index;
+    document.getElementById('kpiNationalIndex').innerText = data.national_airfare_index.toFixed(2);
+    document.getElementById('kpiLaspeyres').innerText = data.laspeyres_index.toFixed(2);
+    document.getElementById('kpiJevons').innerText = data.jevons_index.toFixed(2);
+    document.getElementById('kpiHedonic').innerText = data.hedonic_index.toFixed(2);
     
     document.getElementById('kpiDodChange').innerText = `${data.dod_change_pct > 0 ? '+' : ''}${data.dod_change_pct}%`;
     document.getElementById('kpiMomChange').innerText = `+${data.mom_change_pct}%`;
@@ -164,39 +273,6 @@ function renderCPIAugmentation(cpi) {
     document.getElementById('cpiCommentary').innerText = cpi.commentary;
 }
 
-async function refreshScraperStatus() {
-    try {
-        const res = await fetch('/api/scrapers/status');
-        const data = await res.json();
-        
-        document.getElementById('scraperTotalQuotes').innerText = data.total_quotes_collected.toLocaleString();
-        document.getElementById('scraperLastRun').innerText = data.last_run_timestamp;
-        document.getElementById('scraperHealth').innerText = data.health;
-        
-        const resLogs = await fetch('/api/scrapers/logs');
-        const logs = await resLogs.json();
-        const logBody = document.getElementById('scraperLogsBody');
-        if (logBody) {
-            logBody.innerHTML = '';
-            logs.forEach(l => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b text-xs';
-                tr.innerHTML = `
-                    <td class="py-2 px-3 text-slate-500">${l.run_timestamp}</td>
-                    <td class="py-2 px-3 font-semibold text-slate-700">${l.portal_source}</td>
-                    <td class="py-2 px-3 text-center font-mono">${l.routes_scanned}</td>
-                    <td class="py-2 px-3 text-center font-mono font-bold text-blue-900">${l.quotes_collected}</td>
-                    <td class="py-2 px-3 text-center"><span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">${l.status}</span></td>
-                    <td class="py-2 px-3 text-right font-mono text-slate-600">${l.execution_time_sec}s</td>
-                `;
-                logBody.appendChild(tr);
-            });
-        }
-    } catch (e) {
-        console.error('Error updating scraper status:', e);
-    }
-}
-
 function setupEventListeners() {
     // Route Filter
     const catFilter = document.getElementById('routeCategoryFilter');
@@ -229,23 +305,69 @@ function setupEventListeners() {
     if (btnScrape) {
         btnScrape.addEventListener('click', async () => {
             btnScrape.disabled = true;
-            btnScrape.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Scraping Live Portals...';
+            btnScrape.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Harvesting Live Portals...';
             try {
                 const res = await fetch('/api/scrapers/trigger-batch', { method: 'POST' });
                 const result = await res.json();
                 
-                alert(`Batch Ingestion Successful!
-- Routes Scanned: ${result.routes_scanned}
-- Raw Quotes Ingested: ${result.quotes_collected}
-- Outliers Filtered (Tukey IQR): ${result.outliers_filtered}
-- Execution Time: ${result.execution_time_sec}s`);
-                await loadInitialData();
+                await refreshLiveStreamFeed();
+                alert(`Live Batch Ingestion Completed!
+? Routes Scanned: ${result.routes_scanned}
+? Quotes Collected: ${result.quotes_collected}
+? Outliers Filtered: ${result.outliers_filtered}
+? Recomputed AFI: ${result.recomputed_national_index}
+? Duration: ${result.execution_time_sec}s`);
             } catch (e) {
                 alert('Error running ingestion batch');
             } finally {
                 btnScrape.disabled = false;
-                btnScrape.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Trigger Live Ingestion Batch';
+                btnScrape.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Trigger Instant Ingestion Pass';
             }
+        });
+    }
+    
+    // Toggle Auto Scraping Button
+    const btnToggle = document.getElementById('btnToggleAutoScraper');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', async () => {
+            const newStatus = !isAutoScrapingEnabled;
+            const intervalSel = document.getElementById('scraperIntervalSelect');
+            const intervalVal = intervalSel ? parseInt(intervalSel.value) : 15;
+            
+            try {
+                const res = await fetch('/api/scrapers/toggle-auto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_enabled: newStatus, interval_seconds: intervalVal })
+                });
+                const resData = await res.json();
+                isAutoScrapingEnabled = resData.is_enabled;
+                
+                if (isAutoScrapingEnabled) {
+                    btnToggle.innerHTML = '<i class="fa-solid fa-pause text-amber-500"></i> Pause Auto-Ingestion';
+                    btnToggle.className = 'bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition';
+                } else {
+                    btnToggle.innerHTML = '<i class="fa-solid fa-play text-emerald-400"></i> Resume Auto-Ingestion';
+                    btnToggle.className = 'bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-700 flex items-center gap-1.5 transition';
+                }
+                await refreshLiveStreamFeed();
+            } catch (e) {
+                console.error('Error toggling auto-scraper:', e);
+            }
+        });
+    }
+    
+    // Interval Change Handler
+    const intervalSel = document.getElementById('scraperIntervalSelect');
+    if (intervalSel) {
+        intervalSel.addEventListener('change', async (e) => {
+            const val = parseInt(e.target.value);
+            await fetch('/api/scrapers/toggle-auto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_enabled: isAutoScrapingEnabled, interval_seconds: val })
+            });
+            await refreshLiveStreamFeed();
         });
     }
     

@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VayuDrishti (??????????) | MoSPI Real-time Airfare Price Index</title>
+    <title>VayuDrishti (??????????) | MoSPI Real-time Airfare Price Index & CPI Platform</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js 4 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet GIS CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/style.css?v=2.5">
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Top Tricolor Ribbon -->
     <div class="tricolor-stripe"></div>
+
+    <!-- Government of India Official MoSPI Top Navigation Bar -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
@@ -24,7 +34,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-extrabold uppercase tracking-wider text-blue-900">Government of India &bull; MoSPI</span>
                         <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300">SIH26056</span>
-                        <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-300">NSO Live Feed</span>
+                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300">Continuous Live Sync</span>
                     </div>
                     <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
                         VayuDrishti <span class="text-blue-700 font-semibold">(??????????)</span>
@@ -32,28 +42,46 @@
                     </h1>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+
+            <!-- Live Status & Ingestion Controls -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <div id="headerScraperStatus" class="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-xs">
                     <span class="pulse-green"></span>
-                    <span>Scrapers Ingesting (6 Portals)</span>
+                    <span>Auto-Harvesting Live (Every 15s)</span>
                 </div>
-                <a href="/api/export/gazette-pdf" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-pdf text-amber-400"></i> MoSPI Gazette Bulletin
+                <div class="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1.5 rounded-lg text-xs shadow-sm">
+                    <span class="text-slate-400 text-[11px]">Sync:</span>
+                    <select id="scraperIntervalSelect" class="bg-slate-800 text-amber-400 font-mono font-bold rounded px-1.5 py-0.5 outline-none border border-slate-700 text-xs">
+                        <option value="10">10s</option>
+                        <option value="15" selected>15s</option>
+                        <option value="30">30s</option>
+                        <option value="60">60s</option>
+                    </select>
+                </div>
+                <button id="btnToggleAutoScraper" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-pause text-amber-400"></i> Pause
+                </button>
+                <a href="/api/export/gazette-pdf" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-file-pdf text-amber-400"></i> PDF Gazette
                 </a>
             </div>
         </div>
-        <div class="bg-slate-900 text-slate-200 text-xs py-1 px-4 border-t border-slate-800 ticker-wrap">
-            <div class="ticker-content flex items-center gap-8 font-mono">
-                <span><b class="text-amber-400">NATIONAL AFI:</b> 114.80 (+1.80% MoM)</span>
-                <span><b class="text-blue-400">DEL &rarr; BOM:</b> &#8377;4,850 (AFI: 113.8)</span>
-                <span><b class="text-blue-400">BLR &rarr; DEL:</b> &#8377;5,420 (AFI: 114.5)</span>
-                <span><b class="text-blue-400">BOM &rarr; BLR:</b> &#8377;3,980 (AFI: 112.9)</span>
-                <span><b class="text-red-400">DEL &rarr; IXL (Leh):</b> &#8377;9,850 (AFI: 132.4 ? Surge)</span>
-                <span><b class="text-red-400">DEL &rarr; SXR (Srinagar):</b> &#8377;7,420 (AFI: 126.1 ? Peak)</span>
-                <span><b class="text-emerald-400">DEL &rarr; DBG (UDAN):</b> &#8377;4,120 (AFI: 108.2 &#10003; Capped)</span>
+
+        <!-- High-frequency Marquee Live Ticker Bar -->
+        <div class="bg-slate-900 text-slate-200 text-xs py-1.5 px-4 border-t border-slate-800 ticker-wrap">
+            <div class="ticker-content flex items-center gap-8 font-mono text-[11px]">
+                <span><b class="text-amber-400">NATIONAL AFI:</b> <span id="tickerAfiVal">114.80</span> (Continuous Live Recalculation)</span>
+                <span><b class="text-blue-400">DEL &rarr; BOM (6E-502):</b> &#8377;4,890 (Tukey IQR: Valid)</span>
+                <span><b class="text-blue-400">BLR &rarr; DEL (AI-805):</b> &#8377;5,420 (Hedonic Adjusted)</span>
+                <span><b class="text-blue-400">BOM &rarr; BLR (QP-112):</b> &#8377;3,980 (LCC Tier)</span>
+                <span><b class="text-red-400">DEL &rarr; IXL Leh:</b> &#8377;9,850 (? Seasonal Surge)</span>
+                <span><b class="text-red-400">DEL &rarr; SXR Srinagar:</b> &#8377;7,420 (? Peak Window)</span>
+                <span><b class="text-emerald-400">DEL &rarr; DBG (UDAN):</b> &#8377;4,120 (&#10003; Capped Fare)</span>
                 <span><b class="text-purple-400">CPI NOWCAST:</b> 198.70 (+30 bps Transport Impact)</span>
             </div>
         </div>
+
+        <!-- Navigation Tabs -->
         <div class="bg-white border-t border-slate-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto gap-1 py-1">
                 <button class="tab-btn active px-3.5 py-2 text-xs font-bold rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabOverview">
@@ -81,12 +109,14 @@
         </div>
     </header>
 
+    <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- TAB 1: OVERVIEW & MACRO AFI DASHBOARD -->
         <section id="tabOverview" class="tab-content space-y-6">
+            <!-- Top Macro KPI Cards with dynamic Flash Update ID -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="kpi-card p-4 border-l-4 border-l-blue-900">
+                <div id="nationalKpiCard" class="kpi-card p-4 border-l-4 border-l-blue-900 transition">
                     <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
                         <span>NATIONAL AIRFARE INDEX (AFI)</span>
                         <span class="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Base 2024=100</span>
@@ -131,19 +161,47 @@
 
                 <div class="kpi-card p-4 border-l-4 border-l-purple-600">
                     <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
-                        <span>HIGH-FREQUENCY QUOTES HARVESTED</span>
-                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-bold">24h Ingestion</span>
+                        <span>TOTAL QUOTES HARVESTED</span>
+                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Continuous</span>
                     </div>
                     <div class="text-3xl font-black text-purple-950 flex items-baseline gap-2">
                         <span id="kpiObsCount">2,140</span>
                         <span class="text-xs font-bold text-emerald-600">&#10003; 100% Clean</span>
                     </div>
-                    <div class="text-[11px] text-slate-500 mt-2">
-                        Covering 100+ Routes &bull; 7 Lead Horizons
+                    <div class="text-[11px] text-slate-500 mt-2 flex items-center justify-between">
+                        <span>Covering 100+ Routes</span>
+                        <span class="text-emerald-700 font-semibold">Tukey Filter Active</span>
                     </div>
                 </div>
             </div>
 
+            <!-- LIVE STREAMING INGESTION TERMINAL -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="pulse-green"></span>
+                            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                                Real-Time Flight Ingestion Stream & Outlier Validation
+                            </h2>
+                            <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">Live Telemetry</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Live quotes harvested from IndiGo, Air India, Akasa Air, SpiceJet, MakeMyTrip & EaseMyTrip</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btnTriggerBatch" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-play"></i> Trigger Instant Ingestion Pass
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Quote Cards Stream (Auto-Updating) -->
+                <div id="liveStreamContainer" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    <!-- Populated in real-time via JS -->
+                </div>
+            </div>
+
+            <!-- Time Series Chart & Lead Time Curve -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
                     <div class="flex items-center justify-between mb-4">
@@ -166,7 +224,7 @@
                             <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
                                 <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Lead-Time Price Multipliers
                             </h2>
-                            <p class="text-xs text-slate-500">Index relatives by booking horizon (D-0 to D-60)</p>
+                            <p class="text-xs text-slate-500">Index relatives by booking horizon ($D-0$ to $D-60$)</p>
                         </div>
                     </div>
                     <div class="h-72">
@@ -175,6 +233,7 @@
                 </div>
             </div>
 
+            <!-- Category Sub-Indices Breakdown -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                     <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
@@ -544,20 +603,20 @@
                     <div class="space-y-3 text-xs">
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-slate-500">Total Quotes Collected:</span>
-                            <span id="scraperTotalQuotes" class="font-bold text-blue-950">1,064</span>
+                            <span id="scraperTotalQuotes" class="font-bold text-blue-950">2,140</span>
                         </div>
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-slate-500">Last Execution Run:</span>
-                            <span id="scraperLastRun" class="font-mono font-bold text-slate-800">2026-08-31 10:00:00</span>
+                            <span id="scraperLastRun" class="font-mono font-bold text-slate-800">2026-09-01 10:25:00</span>
                         </div>
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-slate-500">Pipeline Health Status:</span>
-                            <span id="scraperHealth" class="font-bold text-emerald-700">&#10003; OPERATIONAL</span>
+                            <span id="scraperHealth" class="font-bold text-emerald-700">&#10003; OPERATIONAL (15s Loop)</span>
                         </div>
                     </div>
 
                     <button id="btnTriggerBatch" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-play"></i> Trigger Live Ingestion Batch
+                        <i class="fa-solid fa-play"></i> Trigger Instant Ingestion Pass
                     </button>
                     <p class="text-[11px] text-slate-400 text-center">Harvests 100+ routes across 6 portals with instant outlier sanitization.</p>
                 </div>
