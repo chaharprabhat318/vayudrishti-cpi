@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.core.config import STATIC_DIR
 from app.engine.database import init_database, seed_database_if_empty
-from app.scrapers.orchestrator import IngestionOrchestrator
+from app.scrapers.orchestrator import IngestionOrchestrator, auto_scraper_config
 
 from app.api.indices_api import router as indices_router
 from app.api.routes_api import router as routes_router
@@ -47,26 +47,33 @@ app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 async def scheduled_background_scraper():
     """
     Autonomous continuous background scheduler.
-    Runs an ingestion and index update cycle periodically (every 4 hours).
+    Harvests flight fares every 15-30 seconds, runs Tukey IQR filtering,
+    dynamically recalculates indices, and streams fresh live data to the MoSPI dashboard.
     """
     orchestrator = IngestionOrchestrator()
+    # Initial quick burst to populate live stream on boot
+    try:
+        orchestrator.run_live_ingestion_batch(sample_size_routes=3)
+    except Exception as e:
+        print(f"[Boot Initializer] Error: {e}")
+        
     while True:
         try:
-            # Wait 4 hours between automatic background runs
-            await asyncio.sleep(4 * 3600)
-            print("[VayuDrishti Auto-Scheduler] Triggering scheduled autonomous batch ingestion...")
-            result = orchestrator.run_live_ingestion_batch(sample_size_routes=12)
-            print(f"[VayuDrishti Auto-Scheduler] Ingestion completed: {result['quotes_collected']} quotes updated.")
+            interval = auto_scraper_config.get("interval_seconds", 15)
+            await asyncio.sleep(interval)
+            
+            if auto_scraper_config.get("is_enabled", True):
+                res = orchestrator.run_live_ingestion_batch(sample_size_routes=3)
+                print(f"[VayuDrishti Live-Sync] Ingested {res['quotes_collected']} quotes | Recomputed AFI: {res['recomputed_national_index']}")
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[VayuDrishti Auto-Scheduler] Background sync error: {e}")
-            await asyncio.sleep(60)
+            print(f"[VayuDrishti Live-Sync] Background error: {e}")
+            await asyncio.sleep(5)
 
 @app.on_event("startup")
 def on_startup():
     init_database()
     seed_database_if_empty()
-    # Start the automated background updater task
     asyncio.create_task(scheduled_background_scraper())
-    print("VayuDrishti MoSPI System initialized and operational with auto-scheduler enabled!")
+    print("VayuDrishti MoSPI System initialized with Real-Time Auto-Scraping Active!")
