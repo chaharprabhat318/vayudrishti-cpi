@@ -1,10 +1,9 @@
 """
 VayuDrishti Gazette and SDMX Export REST API
-Generates 100% dynamic, live MoSPI Gazetted PDF bulletins with real-time flight quotes and indices.
 """
 import json
 from datetime import datetime
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Query
 from app.engine.report_generator import GazettedReportGenerator
 from app.engine.cpi_augmenter import CPIAugmenter
 from app.engine.database import get_db_connection
@@ -13,7 +12,7 @@ from app.scrapers.orchestrator import live_quotes_buffer
 router = APIRouter(prefix="/export", tags=["Export"])
 
 @router.get("/gazette-pdf")
-def export_gazette_pdf():
+def export_gazette_pdf(t: str = Query(None)):
     """
     Dynamically generates the official MoSPI PDF release using the latest live database records.
     """
@@ -21,6 +20,8 @@ def export_gazette_pdf():
     c = conn.cursor()
     c.execute("SELECT * FROM daily_indices ORDER BY id DESC LIMIT 1")
     row = c.fetchone()
+    c.execute("SELECT COUNT(*) FROM raw_quotes")
+    total_quotes = c.fetchone()[0]
     conn.close()
     
     if row:
@@ -44,6 +45,7 @@ def export_gazette_pdf():
         "dod_change_pct": dod,
         "mom_change_pct": mom,
         "yoy_change_pct": yoy,
+        "observations_count": total_quotes,
         "category_indices": cat_indices,
         "lead_time_indices": lead_indices
     }
@@ -65,7 +67,9 @@ def export_gazette_pdf():
         media_type="application/pdf",
         headers={
             "Content-Disposition": f"attachment; filename={filename}",
-            "Cache-Control": "no-cache, no-store, must-revalidate"
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
         }
     )
 
