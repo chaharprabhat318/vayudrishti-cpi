@@ -377,3 +377,23 @@ function setupEventListeners() {
         if (slider) slider.addEventListener('input', runPolicySimulation);
     });
 }
+
+
+function updateGazettePreview(latestIndex, cpi) {
+    const gazetteMonth = document.getElementById('gazetteMonthYear');
+    if (gazetteMonth) {
+        const now = new Date();
+        gazetteMonth.innerText = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    const gLasp = document.getElementById('gazetteLaspeyres');
+    if (gLasp) gLasp.innerText = latestIndex.national_airfare_index.toFixed(2);
+    
+    const gHed = document.getElementById('gazetteHedonic');
+    if (gHed) gHed.innerText = latestIndex.hedonic_index.toFixed(2);
+    
+    const gJev = document.getElementById('gazetteJevons');
+    if (gJev) gJev.innerText = latestIndex.jevons_index.toFixed(2);
+    
+    const gCpiTrans = document.getElementById('gazetteCpiTransport');
+    if (gCpiTrans && cpi.vayudrishti_cpi_transport_augmented) gCpiTrans.innerText = cpi.vayudrishti_cpi_transport_augmented.toFixed(2);
+}
