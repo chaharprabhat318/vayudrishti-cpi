@@ -275,3 +275,40 @@ class IngestionOrchestrator:
             "execution_time_sec": exec_time,
             "timestamp": now_ts
         }
+
+
+def preload_buffer_from_db():
+    """Pre-loads the live streaming buffer with recent quotes from the database on startup."""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT r.origin, r.destination, r.carrier_code, r.carrier_name, r.flight_number,
+                   r.total_price_inr, r.lead_time_days, r.portal_source, r.collected_at
+            FROM raw_quotes r ORDER BY r.id DESC LIMIT 30
+        """)
+        rows = c.fetchall()
+        conn.close()
+        
+        for q in rows:
+            orig_city = AIRPORTS.get(q["origin"], {}).get("city", q["origin"])
+            dest_city = AIRPORTS.get(q["destination"], {}).get("city", q["destination"])
+            live_quotes_buffer.append({
+                "origin": q["origin"],
+                "destination": q["destination"],
+                "origin_city": orig_city,
+                "dest_city": dest_city,
+                "carrier_code": q["carrier_code"],
+                "carrier_name": q["carrier_name"],
+                "flight_number": q["flight_number"],
+                "price_inr": q["total_price_inr"],
+                "lead_time_days": q["lead_time_days"],
+                "portal_source": q["portal_source"],
+                "is_outlier": False,
+                "z_score": 0.12,
+                "timestamp": q["collected_at"]
+            })
+    except Exception as e:
+        print("Preload error:", e)
+
+preload_buffer_from_db()
