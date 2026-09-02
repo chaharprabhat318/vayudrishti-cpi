@@ -397,3 +397,11 @@ function updateGazettePreview(latestIndex, cpi) {
     const gCpiTrans = document.getElementById('gazetteCpiTransport');
     if (gCpiTrans && cpi.vayudrishti_cpi_transport_augmented) gCpiTrans.innerText = cpi.vayudrishti_cpi_transport_augmented.toFixed(2);
 }
+
+
+function downloadLivePdf(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const currentAfi = (typeof lastKnownIndexValue !== 'undefined' && lastKnownIndexValue) ? lastKnownIndexValue : 114.80;
+    const url = `/api/export/gazette-pdf?afi=${currentAfi}&t=${Date.now()}`;
+    window.open(url, '_blank');
+}

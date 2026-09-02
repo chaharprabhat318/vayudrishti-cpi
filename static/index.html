@@ -61,7 +61,7 @@
                 <button id="btnToggleAutoScraper" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-pause text-amber-400"></i> Pause
                 </button>
-                <a href="/api/export/gazette-pdf" onclick="this.href='/api/export/gazette-pdf?t='+Date.now()" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                <a href="javascript:void(0)" onclick="downloadLivePdf(event)" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-file-pdf text-amber-400"></i> PDF Gazette
                 </a>
             </div>
@@ -541,7 +541,7 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="/api/export/gazette-pdf" onclick="this.href='/api/export/gazette-pdf?t='+Date.now()" target="_blank" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2">
+                        <a href="javascript:void(0)" onclick="downloadLivePdf(event)" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
                             <i class="fa-solid fa-download text-amber-400"></i> Download Official PDF Bulletin
                         </a>
                         <a href="/api/export/json-stat" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 flex items-center gap-1.5">
