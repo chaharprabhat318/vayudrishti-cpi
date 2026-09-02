@@ -68,12 +68,23 @@ def find_static_file(rel_path: str):
             return c
     return None
 
-# 1. Root Route Handler: ALWAYS returns index.html safely
+# 1. Root Route Handler: ALWAYS returns index.html with patched download buttons
 @app.get("/")
 async def serve_root_page():
     p = find_static_file("index.html")
     if p:
-        return FileResponse(str(p), media_type="text/html")
+        html = p.read_text(encoding="utf-8", errors="ignore")
+        # Patch: replace popup-blocked downloadLivePdf with direct download links
+        html = html.replace(
+            'href="javascript:void(0)" onclick="downloadLivePdf(event)"',
+            'href="/api/export/gazette-pdf" onclick="this.href=\'/api/export/gazette-pdf?afi=\'+(typeof lastKnownIndexValue!==\'undefined\'?lastKnownIndexValue:120)+\'&t=\'+Date.now()" download'
+        )
+        # Also patch any old static /api/export/gazette-pdf links without dynamic params
+        html = html.replace(
+            'href="/api/export/gazette-pdf" target="_blank"',
+            'href="/api/export/gazette-pdf" onclick="this.href=\'/api/export/gazette-pdf?afi=\'+(typeof lastKnownIndexValue!==\'undefined\'?lastKnownIndexValue:120)+\'&t=\'+Date.now()" download'
+        )
+        return HTMLResponse(content=html)
     return HTMLResponse("<h1>VayuDrishti System Booting... Please refresh in 5 seconds.</h1>")
 
 # 2. Static Asset Routes (JS/CSS/Assets) with automatic fallback
