@@ -8,6 +8,7 @@ from app.engine.policy_simulator import PolicySimulator
 router = APIRouter(prefix="/simulation", tags=["Policy Simulation"])
 
 @router.post("/run", response_model=PolicySimulationResponse)
+@router.post("/simulate", response_model=PolicySimulationResponse)
 def run_simulation(req: PolicySimulationRequest):
     res = PolicySimulator.simulate_policy_shock(
         baseline_index=114.8,
