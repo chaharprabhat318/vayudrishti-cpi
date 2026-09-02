@@ -3,7 +3,6 @@ VayuDrishti Data Sanitization & Statistical Outlier Filtering Engine
 Implements Tukey IQR fences, Modified Z-scores (MAD), and Winsorization.
 """
 import numpy as np
-import pandas as pd
 from typing import List, Dict, Tuple
 
 class DataSanitizer:
