@@ -1,6 +1,8 @@
 """
 VayuDrishti (??????????) - Enterprise MoSPI Backend Application
 Ministry of Statistics and Programme Implementation (MoSPI), Government of India
+Version: 2.5.0 (High-Frequency Real-Time Scraping & Dynamic Gazette PDF Engine)
+Last Updated: 02-September-2026
 """
 import os
 import sys

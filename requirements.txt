@@ -1,11 +1,7 @@
 fastapi
 uvicorn
 pydantic
-pandas
 numpy
-scipy
-httpx
-beautifulsoup4
 reportlab
 requests
-openpyxl
+httpx
