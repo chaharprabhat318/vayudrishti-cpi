@@ -1,7 +1,7 @@
 """
-VayuDrishti (??????????) - Enterprise MoSPI Backend Application
-Ministry of Statistics and Programme Implementation (MoSPI), Government of India
-Version: 2.5.0 (High-Frequency Real-Time Scraping & Dynamic Gazette PDF Engine)
+VayuDrishti (वायुदृष्टि) - SIH26056 Airfare Price Index Prototype
+Built for the Ministry of Statistics and Programme Implementation (MoSPI) challenge
+Version: 2.6.0 (Demo data refresh, dynamic indices, and prototype briefing export)
 Last Updated: 02-September-2026
 """
 import os
@@ -33,9 +33,9 @@ from app.api.scrapers_api import router as scrapers_router
 from app.api.export_api import router as export_router
 
 app = FastAPI(
-    title="VayuDrishti (??????????) - Real-time Airfare Price Index & CPI Platform",
-    description="Enterprise statistical platform developed for MoSPI, Government of India (SIH26056)",
-    version="2.0.0"
+    title="VayuDrishti (वायुदृष्टि) - Airfare Price Index Prototype",
+    description="Smart India Hackathon 2026 prototype for MoSPI PS SIH26056",
+    version="2.6.0"
 )
 
 app.add_middleware(
@@ -68,23 +68,12 @@ def find_static_file(rel_path: str):
             return c
     return None
 
-# 1. Root Route Handler: ALWAYS returns index.html with patched download buttons
+# 1. Root Route Handler
 @app.get("/")
 async def serve_root_page():
     p = find_static_file("index.html")
     if p:
-        html = p.read_text(encoding="utf-8", errors="ignore")
-        # Patch: replace popup-blocked downloadLivePdf with direct download links
-        html = html.replace(
-            'href="javascript:void(0)" onclick="downloadLivePdf(event)"',
-            'href="/api/export/gazette-pdf" onclick="this.href=\'/api/export/gazette-pdf?afi=\'+(typeof lastKnownIndexValue!==\'undefined\'?lastKnownIndexValue:120)+\'&t=\'+Date.now()" download'
-        )
-        # Also patch any old static /api/export/gazette-pdf links without dynamic params
-        html = html.replace(
-            'href="/api/export/gazette-pdf" target="_blank"',
-            'href="/api/export/gazette-pdf" onclick="this.href=\'/api/export/gazette-pdf?afi=\'+(typeof lastKnownIndexValue!==\'undefined\'?lastKnownIndexValue:120)+\'&t=\'+Date.now()" download'
-        )
-        return HTMLResponse(content=html)
+        return FileResponse(str(p), media_type="text/html")
     return HTMLResponse("<h1>VayuDrishti System Booting... Please refresh in 5 seconds.</h1>")
 
 # 2. Static Asset Routes (JS/CSS/Assets) with automatic fallback
@@ -110,8 +99,8 @@ for candidate in [STATIC_DIR, current_dir / "static", current_dir / "app" / "sta
 
 async def scheduled_background_scraper():
     """
-    Autonomous background scheduler.
-    Harvests flight fares every 15-30s, recalculates indices, and streams fresh live data.
+    Prototype background scheduler.
+    Refreshes demo observations, recalculates indices, and updates the dashboard.
     """
     orchestrator = IngestionOrchestrator()
     try:
@@ -126,11 +115,11 @@ async def scheduled_background_scraper():
             
             if auto_scraper_config.get("is_enabled", True):
                 res = orchestrator.run_live_ingestion_batch(sample_size_routes=3)
-                print(f"[VayuDrishti Live-Sync] Ingested {res['quotes_collected']} quotes | Recomputed AFI: {res['recomputed_national_index']}")
+                print(f"[VayuDrishti Demo Refresh] Processed {res['quotes_collected']} observations | Recomputed AFI: {res['recomputed_national_index']}")
         except asyncio.CancelledError:
             break
         except Exception as e:
-            print(f"[VayuDrishti Live-Sync] Background error: {e}")
+            print(f"[VayuDrishti Demo Refresh] Background error: {e}")
             await asyncio.sleep(5)
 
 @app.on_event("startup")
@@ -141,7 +130,7 @@ def on_startup():
     except Exception as e:
         print("[Database Init Error]:", e)
     asyncio.create_task(scheduled_background_scraper())
-    print("[VayuDrishti MoSPI] Server started successfully with Auto-Scraping Active!")
+    print("[VayuDrishti SIH26056] Prototype server started with demo-data refresh active.")
 
 if __name__ == "__main__":
     import uvicorn

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VayuDrishti (??????????) | MoSPI Real-time Airfare Price Index & CPI Platform</title>
+    <title>VayuDrishti (वायुदृष्टि) | SIH26056 Airfare Price Index Prototype</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 Icons -->
@@ -23,7 +23,7 @@
     <!-- Top Tricolor Ribbon -->
     <div class="tricolor-stripe"></div>
 
-    <!-- Government of India Official MoSPI Top Navigation Bar -->
+    <!-- SIH prototype navigation -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
@@ -32,13 +32,13 @@
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-900">Government of India &bull; MoSPI</span>
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-blue-900">Smart India Hackathon 2026 &bull; MoSPI Challenge</span>
                         <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300">SIH26056</span>
-                        <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-300">Continuous Live Sync</span>
+                        <span class="bg-violet-100 text-violet-800 text-[10px] font-bold px-2 py-0.5 rounded border border-violet-300">Prototype • Demo Dataset</span>
                     </div>
                     <h1 class="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-                        VayuDrishti <span class="text-blue-700 font-semibold">(??????????)</span>
-                        <span class="text-xs font-normal text-slate-500 hidden sm:inline">&mdash; Real-time Airfare Price Index for CPI Augmentation</span>
+                        VayuDrishti <span class="text-blue-700 font-semibold">(वायुदृष्टि)</span>
+                        <span class="text-xs font-normal text-slate-500 hidden sm:inline">&mdash; Airfare Price Index for CPI Augmentation</span>
                     </h1>
                 </div>
             </div>
@@ -47,7 +47,7 @@
             <div class="flex flex-wrap items-center gap-2.5">
                 <div id="headerScraperStatus" class="flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-xs">
                     <span class="pulse-green"></span>
-                    <span>Auto-Harvesting Live (Every 15s)</span>
+                    <span>Demo Refresh (Every 15s)</span>
                 </div>
                 <div class="flex items-center gap-1.5 bg-slate-900 text-white px-2.5 py-1.5 rounded-lg text-xs shadow-sm">
                     <span class="text-slate-400 text-[11px]">Sync:</span>
@@ -61,8 +61,8 @@
                 <button id="btnToggleAutoScraper" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-pause text-amber-400"></i> Pause
                 </button>
-                <a href="javascript:void(0)" onclick="downloadLivePdf(event)" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-pdf text-amber-400"></i> PDF Gazette
+                <a href="/api/export/gazette-pdf" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition" download>
+                    <i class="fa-solid fa-file-pdf text-amber-400"></i> Prototype Brief
                 </a>
             </div>
         </div>
@@ -70,14 +70,11 @@
         <!-- High-frequency Marquee Live Ticker Bar -->
         <div class="bg-slate-900 text-slate-200 text-xs py-1.5 px-4 border-t border-slate-800 ticker-wrap">
             <div class="ticker-content flex items-center gap-8 font-mono text-[11px]">
-                <span><b class="text-amber-400">NATIONAL AFI:</b> <span id="tickerAfiVal">114.80</span> (Continuous Live Recalculation)</span>
-                <span><b class="text-blue-400">DEL &rarr; BOM (6E-502):</b> &#8377;4,890 (Tukey IQR: Valid)</span>
-                <span><b class="text-blue-400">BLR &rarr; DEL (AI-805):</b> &#8377;5,420 (Hedonic Adjusted)</span>
-                <span><b class="text-blue-400">BOM &rarr; BLR (QP-112):</b> &#8377;3,980 (LCC Tier)</span>
-                <span><b class="text-red-400">DEL &rarr; IXL Leh:</b> &#8377;9,850 (? Seasonal Surge)</span>
-                <span><b class="text-red-400">DEL &rarr; SXR Srinagar:</b> &#8377;7,420 (? Peak Window)</span>
-                <span><b class="text-emerald-400">DEL &rarr; DBG (UDAN):</b> &#8377;4,120 (&#10003; Capped Fare)</span>
-                <span><b class="text-purple-400">CPI NOWCAST:</b> 198.70 (+30 bps Transport Impact)</span>
+                <span><b class="text-amber-400">NATIONAL AFI:</b> <span id="tickerAfiVal">114.80</span> (Demo refresh)</span>
+                <span><b class="text-blue-400">METHOD:</b> DGCA-weighted Laspeyres + Jevons + Hedonic adjustment</span>
+                <span><b class="text-emerald-400">DATA QUALITY:</b> Tukey IQR filtering and route-level normalisation</span>
+                <span><b class="text-purple-400">POLICY USE:</b> CPI transport-basket nowcasting and scenario analysis</span>
+                <span><b class="text-amber-400">DEPLOYMENT PATH:</b> MoSPI-approved airline / OTA / GDS feeds</span>
             </div>
         </div>
 
@@ -100,7 +97,7 @@
                     <i class="fa-solid fa-sliders"></i> Policy & ATF Simulator
                 </button>
                 <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabGazette">
-                    <i class="fa-solid fa-stamp"></i> Official MoSPI Gazette
+                    <i class="fa-solid fa-file-lines"></i> SIH Prototype Brief
                 </button>
                 <button class="tab-btn px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition whitespace-nowrap" data-tab="tabScrapers">
                     <i class="fa-solid fa-tower-broadcast"></i> Ingestion Telemetry
@@ -114,6 +111,13 @@
 
         <!-- TAB 1: OVERVIEW & MACRO AFI DASHBOARD -->
         <section id="tabOverview" class="tab-content space-y-6">
+            <div class="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 text-violet-950">
+                    <i class="fa-solid fa-lightbulb text-violet-700"></i>
+                    <span><b>SIH prototype mode:</b> the dashboard demonstrates the index methodology with demo and back-tested observations.</span>
+                </div>
+                <span class="font-semibold text-violet-800">Production-ready connector: airline • OTA • GDS</span>
+            </div>
             <!-- Top Macro KPI Cards with dynamic Flash Update ID -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div id="nationalKpiCard" class="kpi-card p-4 border-l-4 border-l-blue-900 transition">
@@ -161,8 +165,8 @@
 
                 <div class="kpi-card p-4 border-l-4 border-l-purple-600">
                     <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
-                        <span>TOTAL QUOTES HARVESTED</span>
-                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Continuous</span>
+                        <span>DEMO OBSERVATIONS</span>
+                        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded font-bold">Refreshable</span>
                     </div>
                     <div class="text-3xl font-black text-purple-950 flex items-baseline gap-2">
                         <span id="kpiObsCount">2,140</span>
@@ -182,15 +186,15 @@
                         <div class="flex items-center gap-2">
                             <span class="pulse-green"></span>
                             <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wide">
-                                Real-Time Flight Ingestion Stream & Outlier Validation
+                                Demo Data Refresh & Outlier Validation
                             </h2>
-                            <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">Live Telemetry</span>
+                            <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">Methodology Demo</span>
                         </div>
-                        <p class="text-xs text-slate-500 mt-0.5">Live quotes harvested from IndiGo, Air India, Akasa Air, SpiceJet, MakeMyTrip & EaseMyTrip</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Refreshable demo observations; production feeds will be activated through MoSPI-approved airline, OTA, or GDS agreements.</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button id="btnTriggerBatch" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-play"></i> Trigger Instant Ingestion Pass
+                        <button id="btnTriggerBatch" data-demo-refresh class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-play"></i> Refresh Demo Dataset
                         </button>
                     </div>
                 </div>
@@ -529,37 +533,37 @@
             </div>
         </section>
 
-        <!-- TAB 6: OFFICIAL MOSPI GAZETTE & EXPORT -->
+        <!-- TAB 6: SIH PROTOTYPE BRIEF & EXPORT -->
         <section id="tabGazette" class="tab-content hidden space-y-6">
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 border-b pb-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-stamp text-blue-900"></i> MoSPI Official Gazetted Statistical Release
+                            <i class="fa-solid fa-file-lines text-blue-900"></i> SIH Prototype Brief & Interoperability Export
                         </h2>
-                        <p class="text-xs text-slate-500">Government publication compliant with UN/IMF SDMX and Open Government Data (data.gov.in) standards</p>
+                        <p class="text-xs text-slate-500">Presentation-ready snapshot with a government-integration roadmap; not an official publication.</p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="javascript:void(0)" onclick="downloadLivePdf(event)" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
-                            <i class="fa-solid fa-download text-amber-400"></i> Download Official PDF Bulletin
+                        <a href="/api/export/gazette-pdf" class="bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition" download>
+                            <i class="fa-solid fa-download text-amber-400"></i> Download Prototype Brief
                         </a>
                         <a href="/api/export/json-stat" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-300 flex items-center gap-1.5">
-                            <i class="fa-solid fa-code"></i> SDMX / JSON-stat Feed
+                            <i class="fa-solid fa-code"></i> JSON-stat Feed
                         </a>
                     </div>
                 </div>
 
                 <div class="max-w-3xl mx-auto bg-white border-2 border-slate-300 shadow-lg p-8 rounded-sm text-slate-800 space-y-4">
                     <div class="text-center border-b-2 border-slate-900 pb-3">
-                        <div class="text-sm font-extrabold tracking-widest uppercase text-blue-950">GOVERNMENT OF INDIA</div>
-                        <div class="text-xs font-bold text-slate-700">MINISTRY OF STATISTICS AND PROGRAMME IMPLEMENTATION</div>
-                        <div class="text-[11px] text-slate-600">NATIONAL STATISTICAL OFFICE (NSO) - PRICE STATISTICS DIVISION</div>
-                        <div class="text-xs font-bold text-red-700 mt-1">MONTHLY STATISTICAL BULLETIN: REAL-TIME AIRFARE PRICE INDEX (AFI)</div>
+                        <div class="text-sm font-extrabold tracking-widest uppercase text-blue-950">VAYUDRISHTI (वायुदृष्टि)</div>
+                        <div class="text-xs font-bold text-slate-700">SMART INDIA HACKATHON 2026 • PS SIH26056</div>
+                        <div class="text-[11px] text-slate-600">MoSPI innovation prototype — not an official Government of India release</div>
+                        <div class="text-xs font-bold text-red-700 mt-1">PROTOTYPE BRIEF: AIRFARE PRICE INDEX (AFI)</div>
                     </div>
 
                     <div class="text-xs text-slate-700 leading-relaxed">
-                        The National Statistical Office (NSO), MoSPI releases the high-frequency <b>Airfare Price Index (AFI)</b> for the month of August 2026. The composite DGCA-weighted Laspeyres Index stands at <b>114.80</b> (Base 2024=100.0), registering a year-on-year inflation of <b>+8.40%</b>. Quality-adjusted Hedonic Index stands at <b>113.90</b>, isolating pure price movements from booking horizon and amenity variations.
+                        VayuDrishti demonstrates a high-frequency <b>Airfare Price Index (AFI)</b> that combines DGCA-inspired route weights, robust outlier treatment, and quality adjustment. The live dashboard values are drawn from the current prototype dataset; the same pipeline is designed to accept MoSPI-approved airline, OTA, and GDS feeds.
                     </div>
 
                     <div class="border border-slate-300 rounded overflow-hidden">
@@ -582,8 +586,8 @@
                     </div>
 
                     <div class="text-[10px] text-slate-500 pt-2 border-t flex justify-between">
-                        <span>Authentication: SHA-256 Validated</span>
-                        <span>Sign-off: Director General, Central Statistics Office (CSO)</span>
+                        <span>Snapshot integrity token generated at export</span>
+                        <span>SIH26056 prototype — no official sign-off</span>
                     </div>
                 </div>
             </div>
@@ -595,9 +599,9 @@
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
                     <div>
                         <h2 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-tower-broadcast text-blue-900"></i> Scraper Orchestration Center
+                            <i class="fa-solid fa-tower-broadcast text-blue-900"></i> Data-Ingestion Architecture
                         </h2>
-                        <p class="text-xs text-slate-500">Autonomous ingestion from airline and OTA endpoints</p>
+                        <p class="text-xs text-slate-500">Demo data-refresh workflow with production connectors planned for airline, OTA, and GDS partners</p>
                     </div>
 
                     <div class="space-y-3 text-xs">
@@ -611,21 +615,21 @@
                         </div>
                         <div class="flex justify-between border-b pb-2">
                             <span class="text-slate-500">Pipeline Health Status:</span>
-                            <span id="scraperHealth" class="font-bold text-emerald-700">&#10003; OPERATIONAL (15s Loop)</span>
+                            <span id="scraperHealth" class="font-bold text-emerald-700">&#10003; DEMO MODE READY</span>
                         </div>
                     </div>
 
-                    <button id="btnTriggerBatch" class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-play"></i> Trigger Instant Ingestion Pass
+                    <button data-demo-refresh class="w-full bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs py-3 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> Refresh Demo Dataset
                     </button>
-                    <p class="text-[11px] text-slate-400 text-center">Harvests 100+ routes across 6 portals with instant outlier sanitization.</p>
+                    <p class="text-[11px] text-slate-400 text-center">Prototype pipeline: ingest → normalise → validate → index → CPI nowcast → government API.</p>
                 </div>
 
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
                     <h2 class="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-list-check text-indigo-700"></i> Recent Ingestion Execution Log
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Historical audit trail of scraping runs, route coverage, and execution times</p>
+                    <p class="text-xs text-slate-500 mb-4">Audit trail of demo refresh runs, route coverage, and execution times</p>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -651,8 +655,8 @@
     <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
             <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-700">VayuDrishti (??????????)</span>
-                <span>&bull; Ministry of Statistics and Programme Implementation (MoSPI)</span>
+                <span class="font-bold text-slate-700">VayuDrishti (वायुदृष्टि)</span>
+                <span>&bull; Built for Smart India Hackathon 2026 — MoSPI PS SIH26056</span>
             </div>
             <div>
                 Developed for Smart India Hackathon &bull; Problem Statement ID: <b>SIH26056</b>

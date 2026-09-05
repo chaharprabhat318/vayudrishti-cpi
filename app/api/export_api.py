@@ -3,7 +3,7 @@ VayuDrishti Gazette and SDMX Export REST API
 """
 import json
 from datetime import datetime
-from fastapi import APIRouter, Response, Query
+from fastapi import APIRouter, Response
 from app.engine.report_generator import GazettedReportGenerator
 from app.engine.cpi_augmenter import CPIAugmenter
 from app.engine.database import get_db_connection
@@ -12,9 +12,9 @@ from app.scrapers.orchestrator import live_quotes_buffer
 router = APIRouter(prefix="/export", tags=["Export"])
 
 @router.get("/gazette-pdf")
-def export_gazette_pdf(afi: float = Query(None), t: str = Query(None)):
+def export_gazette_pdf():
     """
-    Dynamically generates the official MoSPI PDF release using the EXACT live AFI and quotes at this instant.
+    Generates a timestamped SIH prototype briefing from the latest persisted index.
     """
     conn = get_db_connection()
     c = conn.cursor()
@@ -24,27 +24,7 @@ def export_gazette_pdf(afi: float = Query(None), t: str = Query(None)):
     total_quotes = c.fetchone()[0]
     conn.close()
     
-    if afi and afi > 0:
-        # Use exact live screen index value passed from the client
-        lasp = round(afi, 2)
-        jev = round(lasp * 0.985, 2)
-        hed = round(lasp * 0.992, 2)
-        dod = round(((lasp - 100.0) / 100.0) * 0.05, 2)
-        mom = round(((lasp - 100.0) / 100.0) * 0.15, 2)
-        yoy = 8.40
-        cat_indices = {
-            "METRO_METRO": round(lasp * 0.99, 1),
-            "METRO_TIER2": round(lasp * 1.01, 1),
-            "HILL_ISLAND": round(lasp * 1.12, 1),
-            "UDAN_RCS": round(lasp * 0.94, 1)
-        }
-        lead_indices = {
-            0: round(lasp * 2.15, 1),
-            1: round(lasp * 1.78, 1),
-            7: round(lasp * 1.05, 1),
-            30: round(lasp * 0.82, 1)
-        }
-    elif row:
+    if row:
         lasp = row["laspeyres_index"]
         jev = row["jevons_index"]
         hed = row["hedonic_index"]
@@ -80,7 +60,7 @@ def export_gazette_pdf(afi: float = Query(None), t: str = Query(None)):
     )
     
     now_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"MoSPI_AFI_Gazetted_Release_{now_ts}.pdf"
+    filename = f"VayuDrishti_SIH_Prototype_Brief_{now_ts}.pdf"
     
     return Response(
         content=pdf_buffer.getvalue(),

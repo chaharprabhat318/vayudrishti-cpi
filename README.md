@@ -1,7 +1,15 @@
-# VayuDrishti (??????????)
+# VayuDrishti (वायुदृष्टि)
 ### Real-Time Airfare Price Index & CPI Augmentation Platform
-**Ministry of Statistics and Programme Implementation (MoSPI), Government of India**
+**Smart India Hackathon 2026 Prototype for MoSPI PS SIH26056**
 **Smart India Hackathon (SIH26056) | Category: Software / Smart Automation**
+
+---
+
+## Prototype Status
+
+This repository is a presentation-ready SIH prototype. Its current data-refresh service uses seeded and simulated observations to demonstrate the complete pipeline: ingestion, outlier treatment, weighted index construction, CPI nowcasting, policy simulation, and export.
+
+For production, the same ingestion layer is intended to receive MoSPI-approved airline, OTA, or GDS partner feeds. The prototype does not claim official MoSPI endorsement, an official statistical release, or live commercial airline fares.
 
 ---
 
@@ -13,7 +21,7 @@ Traditional survey-based monthly CPI data collection experiences:
 2. **Sampling Bias**: Fails to capture multi-horizon dynamic pricing.
 3. **Amenity Confounding**: Cannot isolate pure price inflation from baggage, duration, or routing shifts.
 
-**VayuDrishti (??????????)** solves this by creating an automated, national statistical office (NSO) grade pipeline that ingests real-time fares across 100+ corridors and 7 booking horizons, computes quality-adjusted price indices (**Jevons, DGCA-weighted Laspeyres, Hedonic OLS Regression**), and provides high-frequency CPI transport augmentation feeds.
+**VayuDrishti (वायुदृष्टि)** demonstrates an NSO-grade pipeline that processes representative airfare observations across routes and booking horizons, computes quality-adjusted price indices (**Jevons, DGCA-weighted Laspeyres, Hedonic OLS Regression**), and provides high-frequency CPI transport-augmentation feeds.
 
 ---
 

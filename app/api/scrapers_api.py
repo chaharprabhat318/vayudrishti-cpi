@@ -28,8 +28,8 @@ def get_scraper_status():
         last_run_timestamp=auto_scraper_config["last_run_timestamp"],
         total_quotes_collected=total_quotes,
         quotes_last_24h=total_quotes,
-        active_sources=["IndiGo_Direct", "AirIndia_Direct", "AkasaAir_Direct", "SpiceJet_Direct", "MakeMyTrip", "EaseMyTrip"],
-        health=f"OPERATING AUTONOMOUSLY (Sync every {auto_scraper_config['interval_seconds']}s)" if auto_scraper_config["is_enabled"] else "PAUSED"
+        active_sources=["Demo data generator", "Historical seed database", "Partner API adapter (planned)"],
+        health=f"DEMO REFRESH ACTIVE (every {auto_scraper_config['interval_seconds']}s)" if auto_scraper_config["is_enabled"] else "DEMO REFRESH PAUSED"
     )
 
 @router.get("/live-stream")
@@ -37,7 +37,7 @@ def get_live_stream_quotes():
     """
     Returns recent quotes from the live streaming ring-buffer + session stats for real-time UI animation.
     """
-    # If buffer is empty, prime it with a fast micro-scrape pass
+    # If the buffer is empty, prime it with a demo-data refresh.
     if len(live_quotes_buffer) == 0:
         orchestrator.run_live_ingestion_batch(sample_size_routes=3)
         
@@ -50,6 +50,7 @@ def get_live_stream_quotes():
     conn.close()
     
     return {
+        "data_mode": "DEMO",
         "is_auto_scraping": auto_scraper_config["is_enabled"],
         "interval_seconds": auto_scraper_config["interval_seconds"],
         "session_quotes_count": auto_scraper_config["session_quotes_count"],

@@ -23,6 +23,7 @@ from app.engine.cpi_augmenter import CPIAugmenter
 # Live streaming ring-buffer of latest 60 quotes for real-time dashboard visualization
 live_quotes_buffer = deque(maxlen=60)
 auto_scraper_config = {
+    "data_mode": "DEMO",
     "is_enabled": True,
     "interval_seconds": 15,
     "session_quotes_count": 0,

@@ -102,11 +102,11 @@ async function refreshLiveStreamFeed() {
         const statusBadge = document.getElementById('headerScraperStatus');
         if (statusBadge) {
             if (isAutoScrapingEnabled) {
-                statusBadge.className = 'flex items-center gap-2 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold';
-                statusBadge.innerHTML = `<span class="pulse-green"></span><span>Auto-Harvesting Live (Every ${data.interval_seconds}s)</span>`;
+                statusBadge.className = 'flex items-center gap-2 bg-violet-50 text-violet-800 border border-violet-200 px-3 py-1.5 rounded-full text-xs font-semibold';
+                statusBadge.innerHTML = `<span class="pulse-green"></span><span>Demo Refresh (Every ${data.interval_seconds}s)</span>`;
             } else {
                 statusBadge.className = 'flex items-center gap-2 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-semibold';
-                statusBadge.innerHTML = `<i class="fa-solid fa-pause text-amber-600"></i><span>Auto-Scraping Paused</span>`;
+                statusBadge.innerHTML = `<i class="fa-solid fa-pause text-amber-600"></i><span>Demo Refresh Paused</span>`;
             }
         }
         
@@ -179,7 +179,7 @@ function renderLiveQuotesStream(quotes) {
                 <span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-semibold">${leadText}</span>
                 <span class="font-bold text-sm text-blue-950 font-mono">&#8377;${q.price_inr.toLocaleString()}</span>
                 <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <i class="fa-solid fa-check text-[9px]"></i> Tukey IQR Pass
+                    <i class="fa-solid fa-check text-[9px]"></i> ${q.is_outlier ? 'Outlier Flagged' : 'Tukey IQR Pass'}
                 </span>
                 <span class="text-[10px] text-slate-400 font-mono hidden md:inline">${q.timestamp.split(' ')[1]}</span>
             </div>
@@ -300,31 +300,30 @@ function setupEventListeners() {
         });
     }
     
-    // Scraper Batch Trigger Button
-    const btnScrape = document.getElementById('btnTriggerBatch');
-    if (btnScrape) {
+    // Demo refresh buttons (one in the overview and one in ingestion telemetry)
+    document.querySelectorAll('[data-demo-refresh]').forEach((btnScrape) => {
         btnScrape.addEventListener('click', async () => {
             btnScrape.disabled = true;
-            btnScrape.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Harvesting Live Portals...';
+            btnScrape.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Refreshing Demo Dataset...';
             try {
                 const res = await fetch('/api/scrapers/trigger-batch', { method: 'POST' });
                 const result = await res.json();
                 
                 await refreshLiveStreamFeed();
-                alert(`Live Batch Ingestion Completed!
-? Routes Scanned: ${result.routes_scanned}
-? Quotes Collected: ${result.quotes_collected}
-? Outliers Filtered: ${result.outliers_filtered}
-? Recomputed AFI: ${result.recomputed_national_index}
-? Duration: ${result.execution_time_sec}s`);
+                alert(`Demo refresh completed
+• Routes sampled: ${result.routes_scanned}
+• Observations generated: ${result.quotes_collected}
+• Outliers flagged: ${result.outliers_filtered}
+• Recomputed AFI: ${result.recomputed_national_index}
+• Duration: ${result.execution_time_sec}s`);
             } catch (e) {
-                alert('Error running ingestion batch');
+                alert('Demo refresh could not be completed');
             } finally {
                 btnScrape.disabled = false;
-                btnScrape.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Trigger Instant Ingestion Pass';
+                btnScrape.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Refresh Demo Dataset';
             }
         });
-    }
+    });
     
     // Toggle Auto Scraping Button
     const btnToggle = document.getElementById('btnToggleAutoScraper');
@@ -344,10 +343,10 @@ function setupEventListeners() {
                 isAutoScrapingEnabled = resData.is_enabled;
                 
                 if (isAutoScrapingEnabled) {
-                    btnToggle.innerHTML = '<i class="fa-solid fa-pause text-amber-500"></i> Pause Auto-Ingestion';
+                    btnToggle.innerHTML = '<i class="fa-solid fa-pause text-amber-500"></i> Pause Demo Refresh';
                     btnToggle.className = 'bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 transition';
                 } else {
-                    btnToggle.innerHTML = '<i class="fa-solid fa-play text-emerald-400"></i> Resume Auto-Ingestion';
+                    btnToggle.innerHTML = '<i class="fa-solid fa-play text-emerald-400"></i> Resume Demo Refresh';
                     btnToggle.className = 'bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-700 flex items-center gap-1.5 transition';
                 }
                 await refreshLiveStreamFeed();

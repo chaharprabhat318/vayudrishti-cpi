@@ -1,7 +1,4 @@
-"""
-VayuDrishti Official MoSPI Gazetted Bulletin & Report Generator
-Generates dynamic, real-time publication-quality PDF bulletins, Excel tables, and SDMX feeds.
-"""
+"""VayuDrishti SIH prototype briefing and interoperable-data-feed generator."""
 import io
 import json
 import hashlib
@@ -15,7 +12,7 @@ class GazettedReportGenerator:
     @staticmethod
     def generate_mospi_gazette_pdf(index_data: dict, cpi_data: dict, recent_quotes: list = None) -> io.BytesIO:
         """
-        Generates a 100% dynamic, live MoSPI Gazetted Statistical Release PDF.
+        Generates a timestamped presentation briefing from the current persisted data.
         """
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
@@ -73,7 +70,7 @@ class GazettedReportGenerator:
         now_dt = datetime.now()
         now_str = now_dt.strftime("%d %B %Y, %H:%M:%S IST")
         unique_token = hashlib.sha256(f"{now_str}-{index_data.get('laspeyres_index', 114.8)}".encode()).hexdigest()[:16].upper()
-        release_id = f"MoSPI/NSO/AFI-{now_dt.strftime('%Y%m%d')}/ID-{unique_token[:8]}"
+        release_id = f"SIH26056/AFI-{now_dt.strftime('%Y%m%d')}/ID-{unique_token[:8]}"
         
         lasp = index_data.get('laspeyres_index', 114.8)
         jev = index_data.get('jevons_index', 113.2)
@@ -84,16 +81,16 @@ class GazettedReportGenerator:
         total_obs = index_data.get('observations_count', 2140)
 
         # Header
-        elements.append(Paragraph("GOVERNMENT OF INDIA", title_style))
-        elements.append(Paragraph("MINISTRY OF STATISTICS AND PROGRAMME IMPLEMENTATION (MoSPI)", title_style))
-        elements.append(Paragraph("NATIONAL STATISTICAL OFFICE (NSO) - PRICE STATISTICS DIVISION", sub_title_style))
+        elements.append(Paragraph("VAYUDRISHTI (वायुदृष्टि)", title_style))
+        elements.append(Paragraph("SMART INDIA HACKATHON 2026 • PS SIH26056", title_style))
+        elements.append(Paragraph("MoSPI innovation prototype • not an official Government of India release", sub_title_style))
         elements.append(Spacer(1, 2))
-        elements.append(Paragraph("<b>STATISTICAL BULLETIN: REAL-TIME AIRFARE PRICE INDEX (AFI)</b>", ParagraphStyle("Title2", alignment=1, fontSize=10.5, leading=13, textColor=colors.HexColor("#C53030"))))
+        elements.append(Paragraph("<b>PROTOTYPE BRIEF: AIRFARE PRICE INDEX (AFI)</b>", ParagraphStyle("Title2", alignment=1, fontSize=10.5, leading=13, textColor=colors.HexColor("#C53030"))))
         elements.append(Spacer(1, 2))
 
         # PROMINENT LIVE TIMESTAMP & AUDIT BADGE BANNER
         badge_data = [
-            [f"<b>LIVE INGESTION TIMESTAMP:</b> {now_str}", f"<b>CURRENT COMPOSITE AFI:</b> {lasp:.2f}", f"<b>RELEASE ID:</b> {release_id}"]
+            [f"<b>DATA SNAPSHOT:</b> {now_str}", f"<b>CURRENT COMPOSITE AFI:</b> {lasp:.2f}", f"<b>BRIEF ID:</b> {release_id}"]
         ]
         t_badge = Table(badge_data, colWidths=[200, 150, 190])
         t_badge.setStyle(TableStyle([
@@ -111,8 +108,8 @@ class GazettedReportGenerator:
 
         # Executive Summary
         summary_text = (
-            f"The National Statistical Office (NSO), MoSPI presents the real-time high-frequency <b>Airfare Price Index (AFI)</b> for India. "
-            f"As of live ingestion snapshot <b>{now_str}</b> (sample size: <b>{total_obs:,} quotes</b> across 100+ corridors), "
+            f"VayuDrishti is a Smart India Hackathon prototype for a high-frequency <b>Airfare Price Index (AFI)</b> for India. "
+            f"This demo snapshot <b>{now_str}</b> uses <b>{total_obs:,} records</b> across representative corridors, "
             f"the All-India Composite DGCA-Weighted Laspeyres Airfare Index stands at <b>{lasp:.2f}</b> (Base 2024=100.0), "
             f"recording a Day-on-Day (DoD) movement of <b>{'+' if dod>=0 else ''}{dod:.2f}%</b> and Month-on-Month (MoM) inflation of <b>+{mom:.2f}%</b>. "
             f"Quality-adjusted Hedonic Index stands at <b>{hed:.2f}</b>, decomposing pure macroeconomic price inflation from dynamic lead-time and baggage inclusions."
@@ -121,7 +118,7 @@ class GazettedReportGenerator:
         elements.append(Spacer(1, 4))
         
         # Table 1: Key Macro Indicators
-        elements.append(Paragraph("<b>Table 1: All-India Real-Time Airfare Index & CPI Transport Augmentation Matrix</b>", h2_style))
+        elements.append(Paragraph("<b>Table 1: Airfare Index & CPI Transport-Augmentation Matrix</b>", h2_style))
         table_data = [
             ["Index Series", "Current Live Value", "Base Value", "DoD (%)", "MoM (%)", "CPI Transport Weight"],
             ["National Airfare Index (Laspeyres)", f"{lasp:.2f}", "100.0", f"{'+' if dod>=0 else ''}{dod:.2f}%", f"+{mom:.2f}%", "18.50% (of Transport)"],
@@ -151,7 +148,7 @@ class GazettedReportGenerator:
         cat_indices = index_data.get("category_indices", {})
         lead_indices = index_data.get("lead_time_indices", {})
         
-        elements.append(Paragraph("<b>Table 2: Live Sub-Index Breakdowns (By Corridor Category & Lead-Time Horizon)</b>", h2_style))
+        elements.append(Paragraph("<b>Table 2: Sub-Index Breakdowns (By Corridor Category & Lead-Time Horizon)</b>", h2_style))
         cat_data = [
             ["Corridor Classification", "Live Index", "Booking Horizon", "Live Index", "Market Concentration (HHI)"],
             ["Metro to Metro (Trunk)", f"{cat_indices.get('METRO_METRO', lasp*0.99):.1f}", "D-0 (Same Day Emergency)", f"{lead_indices.get(0, lasp*2.15):.1f}", "1,840 (Competitive)"],
@@ -176,10 +173,10 @@ class GazettedReportGenerator:
         elements.append(t2)
         elements.append(Spacer(1, 4))
         
-        # Table 3: Recent Live Harvested Flight Quotes (Evidence of live scraping)
+        # Table 3: Recent prototype observations
         if recent_quotes and len(recent_quotes) > 0:
-            elements.append(Paragraph("<b>Table 3: Real-Time Scraped Flight Quotes Audit Trail (Live Evidence Snapshot)</b>", h2_style))
-            quote_table = [["Origin", "Destination", "Carrier", "Flight No", "Horizon", "Live Fare (INR)", "Portal Source", "Tukey IQR Status"]]
+            elements.append(Paragraph("<b>Table 3: Prototype Observation Audit Trail</b>", h2_style))
+            quote_table = [["Origin", "Destination", "Carrier", "Flight No", "Horizon", "Fare (INR)", "Data Source", "Tukey IQR Status"]]
             for q in recent_quotes[:5]:
                 quote_table.append([
                     q.get("origin_city", q.get("origin", "DEL")),
@@ -209,17 +206,17 @@ class GazettedReportGenerator:
         # Policy & Methodological Note
         elements.append(Paragraph("<b>Methodological Note & Data Governance:</b>", h2_style))
         note_text = (
-            "1. <b>Data Collection:</b> Autonomous multi-source web scraping across IndiGo, Air India Group, Akasa Air, SpiceJet, MakeMyTrip, and EaseMyTrip covering 100+ corridors.<br/>"
+            "1. <b>Data Access Roadmap:</b> The prototype runs on demo/back-tested observations. Production onboarding supports MoSPI-approved airline, OTA, or GDS feeds through a pluggable connector layer.<br/>"
             "2. <b>Statistical Weighting:</b> Route passenger traffic weights and airline capacity shares calibrated via official Directorate General of Civil Aviation (DGCA) monthly reports.<br/>"
             "3. <b>Quality Adjustment:</b> Hedonic log-linear regression isolates pure price inflation from luggage inclusions, layovers, and booking windows.<br/>"
-            "4. <b>CPI Transport Augmentation:</b> High-frequency Airfare Index directly feeds the Consumer Price Index Transport & Communication basket (weight 8.59%), delivering nowcasts to the RBI MPC."
+            "4. <b>CPI Transport Augmentation:</b> The prototype demonstrates how a high-frequency Airfare Index can augment the CPI transport basket (weight 8.59%) for policy nowcasting."
         )
         elements.append(Paragraph(note_text, body_style))
         elements.append(Spacer(1, 6))
         
-        # Sign-off
+        # Prototype provenance
         signoff_data = [
-            [f"Digital Signature: SHA-256 Validated\nHash: {unique_token}", "Verified by: Director, Price Statistics Division\nNational Statistical Office (NSO)", "Approved by: Chief Statistician of India\nMoSPI, Government of India"]
+            [f"Snapshot integrity token: {unique_token}", "Prepared for Smart India Hackathon 2026\nPS SIH26056", "Prototype only — no Government endorsement or official publication"]
         ]
         t_sign = Table(signoff_data, colWidths=[180, 180, 180])
         t_sign.setStyle(TableStyle([
@@ -245,8 +242,8 @@ class GazettedReportGenerator:
         return {
             "version": "2.0",
             "class": "dataset",
-            "label": "MoSPI All-India Real-Time Airfare Price Index (AFI)",
-            "source": "Ministry of Statistics and Programme Implementation (MoSPI), Government of India",
+            "label": "VayuDrishti SIH Prototype Airfare Price Index (AFI)",
+            "source": "VayuDrishti — SIH26056 prototype dataset",
             "updated": datetime.now().isoformat(),
             "dimension": {
                 "indicator": {
